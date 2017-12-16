@@ -4,7 +4,7 @@ import math
 import numpy as np
 from pytest import approx
 
-from fastats import single_pass
+from fastats import single_pass, newton_raphson
 
 
 def twice(x):
@@ -146,6 +146,30 @@ def test_multi_column_support():
 
     assert result_npy[0][0] == approx(0.5)
     assert result_npy[4][0] == approx(8.5)
+
+
+def cubic_func(x):
+    return x**3 - x - 1
+
+
+def test_single_pass_multi_replace():
+    """
+    Need to modify ast so that all parent functions
+    where substitutions happen are modified to take
+    the extra arguments for the substitution function.
+
+    In this example, newton_raphson takes the data and
+    a `delta` value, which we need to pass into the
+    parent `single_pass`, and which needs to get passed
+    into the replaced `value` function call.
+    """
+    data = np.array([0.9, 1.0, 1.1])
+    func = single_pass(data, 1e-6,
+                       value=newton_raphson,
+                       root=cubic_func,
+                       return_callable=True)
+
+    result = func(data, 1e-6)
 
 
 if __name__ == '__main__':
